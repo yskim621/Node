@@ -1,0 +1,17 @@
+{
+  "name": "expressweb",
+  "version": "1.0.0",
+  "description": "web Server",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app"
+  },
+  "author": "kim",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}

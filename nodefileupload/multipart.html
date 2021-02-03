@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>파일 업로드</title>
+</head>
+<body>
+	<form id="form" action="/upload" method="post" enctype="multipart/form-data">
+		<input type="text" name="title" id="title"/>
+		<input type="file" name="image" id="image"/>
+		<button type="submit">파일 업로드</button>
+	</form>
+	
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script>
+		document.getElementById('form').addEventListener('submit',
+		 (e) =>{
+			e.preventDefault(); // 원래 기능 제거
+			const formdata = new Formdata();
+			formData.append('image', e.target.image.files[0]);
+			formData.append('title', e.target.image.title.value);
+			//ajax요청
+			axios.post('/upload', formdata);
+		 })
+	</script>
+		
+</body>
+</html>
