@@ -1,78 +1,66 @@
+Console.log('Hello no daemon');
 var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
+var template = require('./lib/template.js');
+var path = require('path');
+var sanitizeHtml = require('sanitize-html');
+const { Console } = require('console');
 
 
-function templateHTML(title, list, body, control){
-  return `
-  <!doctype html>
-  <html>
-  <head>
-    <title>WEB1 - ${title}</title>
-    <meta charset="utf-8">
-  </head>
-  <body>
-    <h1><a href="/">WEB</a></h1>
-    ${list}
-    ${control}
-    ${body}
-  </body>
-  </html>
-  `;
-}
-
-function templateList(filelist){
-  var list = '<ul>';
-  filelist.forEach(value => {
-    list += `<li><a href=/?id=${value}>${value}</a></li>`;
-  });
-  list += '</ul>';
-  return list;
-}
-
-// http로 해당 WebApp에 접속할 때마다 콜백함 수 호출
+// http로 해당 WebApp에 접속할 때마다 콜백 함수 호출(콜백 함수는 객체인 request와 response를 매개변수로 갖음)
 var app = http.createServer(function (request, response) {
   var _url = request.url;
   // port의 뒷 부분인 / 부터 URL의 query string을 객체 형태로 parsing해줌
   var queryData = url.parse(_url, true).query;
   //console.log(queryData);
   var pathname = url.parse(_url, true).pathname;
-  var title = queryData.id
+ 
 
 
   if (pathname === '/') {
     if (queryData.id === undefined) {
-
       fs.readdir(`./data`, function (error, filelist) {
         //console.log(filelist);
         var title = 'Welcome';
         var description = 'Hello, Node.js';
-        var list = templateList(filelist);
-        var template = templateHTML(title, list, 
+        var list = template.list(filelist);
+        var html = template.HTML(title, list, 
           `<h2>${title}</h2><p>${description}</p>`,
           `<a href="/create">create</a>`);
         response.writeHead(200);
-        response.end(template);
+        response.end(html);
       });
     } else {
       fs.readdir(`./data`, function (error, filelist) {
-        fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
+        var filteredId = path.parse(queryData.id).base;
+        fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
           var title = queryData.id;
-          var list =  templateList(filelist);
-          var template = templateHTML(title, list, 
-            `<h2>${title}</h2><p>${description}</p>`,
-            `<a href="/create">create</a> <a href="/update?id=${title}">update</a> `);
+          var sanitizedTitle = sanitizeHtml(title);
+          var sanitizedDescription = sanitizeHtml(description, {
+            allowedTags:['h1']
+          });
+          var list =  template.list(filelist);
+          var html = template.HTML(title, list, 
+            `<h2>${sanitizedTitle}</h2><p>${sanitizedDescription}</p>`,
+            ` <a href="/create">create</a> 
+              <a href="/update?id=${sanitizedTitle}">update</a>
+              <form action="delete_process" method="post">
+                <input type="hidden" name="id" value="${sanitizedTitle}">
+                <input type="submit" value="delete">
+              </form>
+            `);
           response.writeHead(200);
-          response.end(template);
+          response.end(html);
         });
       });
     }
   } else if(pathname === '/create'){
     fs.readdir('./data', function(error, filelist){
       var title = 'WEB - create';
-      var list = templateList(filelist);
-      var template = templateHTML(title, list, `
+      var list = template.list(filelist);
+      var html = template.HTML(title, list, `
         <form action="/create_process" method="post">
           <p><input type="text" name="title" placeholder="title"></p>
           <p>
@@ -84,7 +72,7 @@ var app = http.createServer(function (request, response) {
         </form>
       `, '');
       response.writeHead(200);
-      response.end(template);
+      response.end(html);
     });
   } else if(pathname === '/create_process'){
     var body = '';
@@ -105,10 +93,11 @@ var app = http.createServer(function (request, response) {
 
   } else if(pathname === '/update'){
     fs.readdir(`./data`, function (error, filelist) {
-      fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
+      var filteredId = path.parse(queryData.id).base;
+      fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
         var title = queryData.id;
-        var list =  templateList(filelist);
-        var template = templateHTML(title, list, 
+        var list =  template.list(filelist);
+        var html = template.HTML(title, list, 
           `
           <form action="/update_process" method="post">
           <input type="hidden" name="id" value="${title}">
@@ -123,7 +112,7 @@ var app = http.createServer(function (request, response) {
           `,
           `<a href="/create">create</a> <a href="/update?id=${title}">update</a> `);
         response.writeHead(200);
-        response.end(template);
+        response.end(html);
       });
     });
   } else if(pathname === '/update_process'){
@@ -145,7 +134,24 @@ var app = http.createServer(function (request, response) {
         });
     });
 
-  } else {
+  } else if(pathname === '/delete_process'){
+    var body = '';
+    // 전체 데이터의 일부를 서버가 수신할 때마다 해당 콜백 함수 호출
+    request.on('data', function(data){
+        body = body + data;
+    });
+    request.on('end', function(){
+        var post = qs.parse(body);
+        var id = post.id;
+        var filteredId = path.parse(id).base;
+        fs.unlink(`data/${filteredId}`,function(err){
+          response.writeHead(302, {Location: `/`});
+          response.end();
+        });  
+
+    });
+
+  }  else {
     response.writeHead(404);
     response.end('Not found');
   }
