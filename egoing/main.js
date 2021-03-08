@@ -1,4 +1,3 @@
-Console.log('Hello no daemon');
 var http = require('http');
 var fs = require('fs');
 var url = require('url');
@@ -6,7 +5,6 @@ var qs = require('querystring');
 var template = require('./lib/template.js');
 var path = require('path');
 var sanitizeHtml = require('sanitize-html');
-const { Console } = require('console');
 
 
 // http로 해당 WebApp에 접속할 때마다 콜백 함수 호출(콜백 함수는 객체인 request와 response를 매개변수로 갖음)
