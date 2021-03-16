@@ -1,0 +1,36 @@
+<script>
+  const obj = {
+    firstName: '길동',
+    lastName: '홍',
+    age: 26,
+    fullName: function(){
+      return this.lastName + this.firstName;
+    },
+    detail: {
+      sum: 30
+    }
+  }
+
+  // this가 해당 객체인 obj를 가리키다가 구조분해 후 window 객체를 가리켜 NaN
+  let {firstName: fName, lastName, fullName, detail} = obj;
+  console.log(fName);
+  console.log(lastName);
+  console.log(fullName());
+  console.log(detail.sum);
+
+  //import { useState } from 'react';
+  
+  //ES5
+  var Hero = function(){
+    function Hero(_name){
+      this._name = _name;
+    }
+    Hero.prototype.hello = function(){
+      console.log(this._name + '이(가) 인사합니다.');
+    }
+    return Hero;
+  }();
+
+  var hero = new Hero('불뚝');
+  hero.hello();
+</script>
