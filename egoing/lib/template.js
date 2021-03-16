@@ -19,7 +19,7 @@ module.exports = {
     list: function(filelist){
       var list = '<ul>';
       filelist.forEach(value => {
-        list += `<li><a href=/?id=${value}>${value}</a></li>`;
+        list += `<li><a href=/topic/${value}>${value}</a></li>`;
       });
       list += '</ul>';
       return list;
