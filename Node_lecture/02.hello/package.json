@@ -1,0 +1,21 @@
+{
+  "name": "02_hello",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
+    "http-errors": "^1.8.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.1",
+    "pug": "^3.0.2"
+  }
+}
