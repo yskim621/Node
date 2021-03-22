@@ -9,6 +9,11 @@ app.get('/', (req, res) => {
   res.send(`<h1>Hello Express! ${myName}</h1>`)
 })
 
+app.get('/api2/:name', (req, res) => {
+  const myName = req.params.name || 'karl';
+  res.send(`<h1>Hello Express! ${myName}</h1>`)
+})
+
 
 app.get('/hello', (req, res) => {
   res.send('<h1>Hello, Express</h1>')
