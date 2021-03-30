@@ -13,9 +13,9 @@ block content
 			each book in books
 				tr 
 					td= book.id
-					td.text-left
-						a(href=`/book/view/${book.id}`)=book.bookName
-					td.text-left= book.content
+					td(style="text-align: left")
+						a(href=`/book/view/${book.id}?page=${pager.page}`)= book.bookName
+					td(style="text-align: left")= book.content
 					td= book.writer
 					td= book.createdAt
 					td
