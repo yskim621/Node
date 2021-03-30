@@ -1,30 +1,81 @@
 const express = require('express')
+const moment = require('moment')
+const joi = require('../middlewares/joi-mw')
+const pager = require('../modules/pager-conn')
 const router = express.Router()
-const mysql = require('mysql2')
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '000000',
-  database: 'karl'
-});
+const { pool } = require('../modules/mysql-conn')
+const pug = {title: '도서관리', file: 'book'}
 
-router.get('/', (req, res, next)=>{
-  let sql = 'SELECT * FROM books ORDER BY id DESC';
-  connection.query(sql, (err, result)=>{
-    res.json(result);
-  })
+router.get(['/', '/list', "/list/:page"], async (req, res, next)=>{
+	try {
+		let page, connect, sql, values;
+		page = req.params.page || 1
+		connect = await pool.getConnection()
+		sql = 'SELECT count(*) FROM books'
+		const [[recordCount]] = await connect.query(sql)
+		const pageObj = pager(page, recordCount['count(*)'])
+		sql = 'SELECT * FROM books ORDER BY id DESC LIMIT ?, ?'
+		const [rs] = await connect.query(sql, [pageObj.startRec, pageObj.listCnt])
+		connect.release()
+		const books = rs.map(v => {
+			v.createdAt = moment(v.createdAt).format('YYYY-MM-DD')
+			return v;
+		})
+		res.render('book/list', { ...pug, books, pager: pageObj })
+	}
+	catch(err) {
+		next(err)
+	}
 })
 
 router.get('/create', (req, res, next)=> {
-  res.render('book/create')
+  res.render('book/create', pug)
 })
 
-router.get('/save', (req, res, next)=> {
-  let sql = 'insert into books set bookName=?, writer=?, content=?'
-  let values = [req.query.bookName, req.query.writer, req.query.content]
-  connection.query(sql, values, (err, result)=>{
+router.post('/save', joi('book'), async(req, res, next)=> {
+  try{ 
+    if(req.joiError) next(req.joiError)
+    else{
+      let { bookName, writer, content } = req.body
+      let sql = 'insert into books set bookName=?, writer=?, content=?'
+      let values = [bookName, writer, content]
+      const connect = await pool.getConnection()
+      const [result] = await connect.query(sql, values)
+      connect.release()
+      res.redirect('/book')
+    }
+  }
+  catch(err){
+    next(err)
+  }
+})
+
+router.get('/remove/:id', async(req, res, next)=>{
+  try{
+    let sql = 'DELETE FROM books WHERE id=' + req.params.id
+    const connect = await pool.getConnection()
+    const [result] = await connect.query(sql)
+    console.log(result)
+    connect.release()
     res.redirect('/book')
-  })
+  }
+  catch(err){
+    next(err)
+  }
+})
+
+router.get('/view/:id', async(req, res, next) => {
+  try{
+    let sql, connect;
+    sql = 'SELECT * FROM books WHERE id=' + req.params.id
+    connect = await pool.getConnection
+    const [[rs]] = await connect.query(sql)
+    rs.createdAt = moment(rs.createdAt).format('YYYY-MM-DD')
+    res.render('book/view', {...pug, rs, page: req.query.page || 1})
+  }
+  catch(err){
+    next(err)
+  }
 })
 
 module.exports = router;
