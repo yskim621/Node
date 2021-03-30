@@ -7,3 +7,12 @@
 -- DELETE FROM books WHERE id=4;
 
 SELECT * FROM books ORDER BY id DESC; -- ASC
+
+
+create table books (
+	id       int auto_increment primary key,
+	bookName varchar(255) not null,
+	writer   varchar(255) not null,
+	content  text,
+	createdAt datetime default now()
+	)engine=innodb default charset=utf8;
