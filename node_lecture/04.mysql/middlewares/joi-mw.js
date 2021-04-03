@@ -4,6 +4,8 @@ const Joi = require('joi')
 
 const schemas = {
   book: {
+    id: Joi.number(),
+    page: Joi.number(),
     bookName: Joi.string().max(255).required(),
     writer: Joi.string().max(255).required(),
     content: Joi.string(),
