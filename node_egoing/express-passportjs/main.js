@@ -7,6 +7,7 @@ var helmet = require('helmet')
 app.use(helmet());
 var session = require('express-session')
 var FileStore = require('session-file-store')(session)
+var flash = require('connect-flash');
 
 
 app.use(express.static('public'));
@@ -16,49 +17,15 @@ app.use(session({
   secret: 'asadlfkj!@#!@#dfgasdg',
   resave: false,
   saveUninitialized: true,
-  store:new FileStore()
-}))
-
-var authData = {
-  email: 'egoing777@gmail.com',
-  password: '111111',
-  nickname: 'egoing'
-}
-
-// passport는 session을 내부적으로 사용하므로 세션 선언 후에 작성되야함
-var passport = require('passport')
-  , LocalStrategy = require('passport-local').Strategy;
-
-app.use(passport.initialize());  
-app.use(passport.session());  
-  
-passport.use(new LocalStrategy(
-  {
-    usernameField: 'email',
-    passwordField: 'pwd'
-  },
-  function(username, password, done) {
-    console.log('LocalStrategy', username, password)
-    if(username === authData.email){
-      console.log(1);
-      if(password === authData.password){
-        console.log(2);
-        return done(null, authData);
-      } else{
-        console.log(3);
-        return done(null, false, { message: 'Incorrect password.' });
-      }
-    } else{
-      console.log(4);
-      return done(null, false, { message: 'Incorrect username.' });
-    }
+  store:new FileStore(),
+  cookie: {
+    secure: false
   }
-));  
-app.post('/auth/login_process',
-  passport.authenticate('local', { 
-    successRedirect: '/',
-    failureRedirect: '/auth/login' 
-}));
+}))
+app.use(flash());
+
+
+var passport = require('./lib/passport')(app);
                             
 app.get('*', function(request, response, next){
   fs.readdir('./data', function(error, filelist){
@@ -69,7 +36,7 @@ app.get('*', function(request, response, next){
 
 var indexRouter = require('./routes/index');
 var topicRouter = require('./routes/topic');
-var authRouter = require('./routes/auth');
+var authRouter = require('./routes/auth')(passport);
 const e = require('express');
 const { contentSecurityPolicy } = require('helmet');
 
